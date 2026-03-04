@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Braze Discovery Form</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #0f172a 50%, #1a1a3e 100%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .header { text-align: center; margin-bottom: 3rem; }
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #06b6d4, #3b82f6, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .header p { font-size: 1.1rem; color: #cbd5e1; }
+
+    .form-card { background: rgba(30, 41, 59, 0.8); border: 2px solid rgba(71, 85, 105, 0.6); border-radius: 1.25rem; padding: 2.5rem; margin-bottom: 2rem; backdrop-filter: blur(10px); }
+    .form-section { margin-bottom: 2.5rem; }
+    .form-section:not(:last-child) { padding-bottom: 2.5rem; border-bottom: 1px solid rgba(71, 85, 105, 0.3); }
+    .section-title { font-size: 1.3rem; font-weight: 700; color: #06b6d4; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+
+    .form-group { margin-bottom: 1.75rem; }
+    .form-group label { display: block; font-weight: 600; color: #cbd5e1; margin-bottom: 0.6rem; font-size: 0.95rem; }
+    .required { color: #ef4444; }
+
+    input[type="text"], input[type="email"], input[type="url"], select, textarea {
+      width: 100%;
+      padding: 0.875rem;
+      background: rgba(51, 65, 85, 0.6);
+      border: 1px solid rgba(71, 85, 105, 0.6);
+      border-radius: 0.6rem;
+      color: #e2e8f0;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus, input[type="email"]:focus, input[type="url"]:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #06b6d4;
+      background: rgba(51, 65, 85, 0.9);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+    }
+
+    textarea { min-height: 100px; resize: vertical; }
+
+    .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
+    .checkbox-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1.25rem;
+      background: rgba(51, 65, 85, 0.3);
+      border: 1px solid rgba(71, 85, 105, 0.4);
+      border-radius: 0.6rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .checkbox-item:hover { background: rgba(51, 65, 85, 0.5); border-color: rgba(71, 85, 105, 0.6); }
+    .checkbox-item input[type="checkbox"] { margin-top: 0.3rem; cursor: pointer; accent-color: #06b6d4; width: 18px; height: 18px; flex-shrink: 0; }
+    .checkbox-item label { cursor: pointer; margin: 0; font-weight: 500; }
+    .checkbox-item.checked { background: rgba(6, 182, 212, 0.2); border-color: rgba(6, 182, 212, 0.6); }
+    .checkbox-item.checked label { color: #06b6d4; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+    .tag-input { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .tag {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(6, 182, 212, 0.2);
+      border: 1px solid rgba(6, 182, 212, 0.6);
+      color: #06b6d4;
+      padding: 0.5rem 1rem;
+      border-radius: 0.35rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .tag button { background: none; border: none; color: #06b6d4; cursor: pointer; font-weight: bold; padding: 0; }
+
+    .input-with-tags { position: relative; }
+    .tag-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(71, 85, 105, 0.6); border-radius: 0.6rem; max-height: 200px; overflow-y: auto; z-index: 10; margin-top: 0.5rem; }
+    .tag-suggestion {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      color: #cbd5e1;
+      border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+      transition: background 0.2s ease;
+    }
+    .tag-suggestion:hover { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+
+    .button-group { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+    button {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #06b6d4, #0ea5e9);
+      color: white;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: rgba(71, 85, 105, 0.6); color: white; }
+    .btn-secondary:hover { background: rgba(71, 85, 105, 0.9); }
+
+    .status-bar {
+      font-size: 0.9rem;
+      padding: 1rem 1.5rem;
+      border-radius: 0.6rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-bar.incomplete { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; }
+    .status-bar.complete { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.4); color: #86efac; }
+
+    .metric-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: flex-end;
+    }
+    .metric-row input { flex: 1; }
+    .metric-row button { padding: 0.875rem 1.25rem; }
+
+    .hidden { display: none !important; }
+
+    .help-text { font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 Braze Discovery</h1>
+      <p>Understand your path to personalized customer engagement at scale</p>
+    </div>
+
+    <div class="form-card">
+      <div class="status-bar incomplete" id="statusBar">
+        <span id="statusText">Complete the form to generate insights</span>
+        <span id="completionPct">0%</span>
+      </div>
+
+      <form id="discoveryForm">
+        <!-- COMPANY INFO -->
+        <div class="form-section">
+          <div class="section-title">🏢 Company</div>
+          
+          <div class="form-group">
+            <label>Company Name <span class="required">*</span></label>
+            <input type="text" id="companyName" placeholder="e.g., DoorDash, Spotify, Nike" required>
+          </div>
+
+          <div class="form-group">
+            <label>Website</label>
+            <input type="url" id="website" placeholder="https://example.com">
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <label>Industry <span class="required">*</span></label>
+              <select id="industry" required>
+                <option value="">Select industry...</option>
+                <option value="QSR">Quick Service Restaurant / Food Delivery</option>
+                <option value="Travel">Travel & Hospitality</option>
+                <option value="Health">Health & Wellness</option>
+                <option value="Mobility">Mobility / Ride-hailing</option>
+                <option value="E-commerce">E-commerce / Retail</option>
+                <option value="SaaS">SaaS / Software</option>
+                <option value="Financial">Financial Services</option>
+                <option value="Media">Media & Entertainment</option>
+                <option value="Gaming">Gaming</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Company Size (ARR) <span class="required">*</span></label>
+              <select id="size" required>
+                <option value="">Select size...</option>
+                <option value="$10M-$50M">$10M - $50M</option>
+                <option value="$50M-$100M">$50M - $100M</option>
+                <option value="$100M-$500M">$100M - $500M</option>
+                <option value="$500M-$1B">$500M - $1B</option>
+                <option value="$1B+">$1B+</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- KEY CHALLENGES -->
+        <div class="form-section">
+          <div class="section-title">⚡ Key Challenges</div>
+          <p style="color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.95rem;">Select the challenges Braze can help solve</p>
+
+          <div>
+            <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(71, 85, 105, 0.3);">
+              <div style="font-weight: 600; color: #06b6d4; margin-bottom: 1rem; font-size: 0.95rem;">Core Braze Capabilities</div>
+              <div class="checkbox-group" id="brazeChallenges"></div>
+            </div>
+
+            <div>
+              <div style="font-weight: 600; color: #a78bfa; margin-bottom: 1rem; font-size: 0.95rem;">Decisioning Studio (AI Optimization)</div>
+              <div class="checkbox-group" id="decisioningChallenges"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TECH STACK -->
+        <div class="form-section">
+          <div class="section-title">🛠️ Current Tech Stack</div>
+          <p style="color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.95rem;">Tools you use today for customer data and engagement</p>
+
+          <div class="two-col">
+            <div class="form-group">
+              <label>Data Warehouses / CDPs</label>
+              <div class="input-with-tags">
+                <input type="text" id="dataWarehouseInput" placeholder="Snowflake, BigQuery, Segment, Meltano..." autocomplete="off">
+                <div class="tag-input" id="dataWarehouseTags"></div>
+              </div>
+              <div class="help-text">e.g., Snowflake, BigQuery, Redshift, Segment, mParticle, Treasure Data</div>
+            </div>
+
+            <div class="form-group">
+              <label>BI / Analytics Tools</label>
+              <div class="input-with-tags">
+                <input type="text" id="biInput" placeholder="Looker, Tableau, Mixpanel..." autocomplete="off">
+                <div class="tag-input" id="biTags"></div>
+              </div>
+              <div class="help-text">e.g., Looker, Tableau, Metabase, Mode, Amplitude, Mixpanel</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Other Marketing / Engagement Tools</label>
+            <div class="input-with-tags">
+              <input type="text" id="marketingInput" placeholder="Klaviyo, HubSpot, Iterable..." autocomplete="off">
+              <div class="tag-input" id="marketingTags"></div>
+            </div>
+            <div class="help-text">e.g., Klaviyo, HubSpot, Iterable, Marketo, Salesforce Marketing Cloud</div>
+          </div>
+        </div>
+
+        <!-- BUSINESS AS USUAL -->
+        <div class="form-section">
+          <div class="section-title">📊 Business as Usual Today</div>
+          <p style="color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.95rem;">How you currently work and where friction exists</p>
+
+          <div class="form-group">
+            <label>How do you currently build and launch campaigns?</label>
+            <textarea id="campaignProcess" placeholder="e.g., 'Manual CSV pulls from data warehouse, build in email tool, launch in 2-3 weeks'"></textarea>
+            <div class="help-text">Describe the workflow from idea to send</div>
+          </div>
+
+          <div class="form-group">
+            <label>How are you optimizing campaigns today? (testing, personalization, etc.)</label>
+            <textarea id="optimization" placeholder="e.g., 'Basic A/B testing quarterly, static segmentation, one-size-fits-all messaging'"></textarea>
+            <div class="help-text">Testing cadence, segmentation approach, personalization depth</div>
+          </div>
+
+          <div class="form-group">
+            <label>What's slowing you down the most?</label>
+            <textarea id="bottleneck" placeholder="e.g., 'Manual data pulls take 2 weeks', 'Can't test fast enough', 'No channel coordination'"></textarea>
+            <div class="help-text">Time, resources, tooling, process constraints</div>
+          </div>
+        </div>
+
+        <!-- CORE GOALS -->
+        <div class="form-section">
+          <div class="section-title">🎯 Core Goals</div>
+          <p style="color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.95rem;">What you want to achieve in the next 12 months</p>
+
+          <div class="form-group">
+            <label>What's your #1 priority? <span class="required">*</span></label>
+            <textarea id="priority" placeholder="e.g., 'Reduce churn from 8% to 5%', 'Increase free-to-paid conversion by 30%'" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>How will you measure success?</label>
+            <textarea id="successMetrics" placeholder="e.g., 'Revenue impact', 'Time-to-launch reduction', 'Campaign ROI improvement'"></textarea>
+          </div>
+        </div>
+
+        <!-- METRICS THAT MATTER -->
+        <div class="form-section">
+          <div class="section-title">📈 Metrics That Matter</div>
+          <p style="color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.95rem;">Current and target metrics (add as many as relevant)</p>
+
+          <div id="metricsContainer">
+            <div class="metric-row">
+              <input type="text" placeholder="Metric name (e.g., Churn Rate, Conversion %, Revenue)" class="metric-name">
+              <input type="text" placeholder="Current value (e.g., 8%, $2.5M)" class="metric-current">
+              <input type="text" placeholder="Target (e.g., 5%, $3.5M)" class="metric-target">
+              <button type="button" class="btn-secondary" onclick="removeMetric(this)">Remove</button>
+            </div>
+          </div>
+
+          <button type="button" class="btn-secondary" onclick="addMetric()">+ Add Metric</button>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="button-group">
+          <button type="submit" class="btn-primary" id="submitBtn">✨ Generate Story & Next Steps</button>
+          <button type="button" class="btn-secondary" id="shareLinkBtn" style="display: none;">🔗 Copy Shareable Link</button>
+          <button type="reset" class="btn-secondary">Clear Form</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- OUTPUT -->
+    <div id="outputSection" class="hidden"></div>
+  </div>
+
+  <script>
+    // URL Parameter Handler - Pre-fill form from URL
+    function loadFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      
+      if (params.has('company')) document.getElementById('companyName').value = decodeURIComponent(params.get('company'));
+      if (params.has('website')) document.getElementById('website').value = decodeURIComponent(params.get('website'));
+      if (params.has('industry')) document.getElementById('industry').value = params.get('industry');
+      if (params.has('size')) document.getElementById('size').value = params.get('size');
+      if (params.has('priority')) document.getElementById('priority').value = decodeURIComponent(params.get('priority'));
+      if (params.has('bottleneck')) document.getElementById('bottleneck').value = decodeURIComponent(params.get('bottleneck'));
+      if (params.has('campaigns')) document.getElementById('campaignProcess').value = decodeURIComponent(params.get('campaigns'));
+      if (params.has('optimization')) document.getElementById('optimization').value = decodeURIComponent(params.get('optimization'));
+      if (params.has('success')) document.getElementById('successMetrics').value = decodeURIComponent(params.get('success'));
+      
+      // Pre-select challenges
+      if (params.has('challenges')) {
+        const challenges = params.get('challenges').split(',');
+        challenges.forEach(ch => {
+          const checkbox = document.getElementById(ch);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+      }
+      
+      updateCompletion();
+      renderChallenges();
+    }
+
+    // Generate shareable link
+    function generateShareableLink() {
+      const formData = collectFormData();
+      
+      const params = new URLSearchParams();
+      params.set('company', formData.company);
+      params.set('website', formData.website);
+      params.set('industry', formData.industry);
+      params.set('size', formData.size);
+      params.set('challenges', formData.challenges.join(','));
+      params.set('priority', formData.priority);
+      params.set('bottleneck', formData.currentBAU.bottleneck);
+      params.set('campaigns', formData.currentBAU.campaigns);
+      params.set('optimization', formData.currentBAU.optimization);
+      params.set('success', formData.successMetrics);
+      
+      const baseUrl = window.location.href.split('?')[0];
+      const shareUrl = `${baseUrl}?${params.toString()}`;
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        const btn = document.getElementById('shareLinkBtn');
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied to clipboard!';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    // Copy link from brief view
+    function copyCurrentLink() {
+      const formData = collectFormData();
+      
+      const params = new URLSearchParams();
+      params.set('company', formData.company);
+      params.set('website', formData.website);
+      params.set('industry', formData.industry);
+      params.set('size', formData.size);
+      params.set('challenges', formData.challenges.join(','));
+      params.set('priority', formData.priority);
+      params.set('bottleneck', formData.currentBAU.bottleneck);
+      params.set('campaigns', formData.currentBAU.campaigns);
+      params.set('optimization', formData.currentBAU.optimization);
+      params.set('success', formData.successMetrics);
+      
+      const baseUrl = window.location.href.split('?')[0];
+      const shareUrl = `${baseUrl}?${params.toString()}`;
+      
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('✓ Link copied to clipboard!\n\nShare this link to pre-fill the form with all this data.');
+      });
+    }
+
+    function collectFormData() {
+      return {
+        company: document.getElementById('companyName').value,
+        website: document.getElementById('website').value,
+        industry: document.getElementById('industry').value,
+        size: document.getElementById('size').value,
+        challenges: Array.from(document.querySelectorAll('.checkbox-item input:checked')).map(cb => cb.value),
+        priority: document.getElementById('priority').value,
+        successMetrics: document.getElementById('successMetrics').value,
+        currentBAU: {
+          campaigns: document.getElementById('campaignProcess').value,
+          optimization: document.getElementById('optimization').value,
+          bottleneck: document.getElementById('bottleneck').value
+        },
+        metrics: Array.from(document.querySelectorAll('.metric-row')).map(row => ({
+          name: row.querySelector('.metric-name').value,
+          current: row.querySelector('.metric-current').value,
+          target: row.querySelector('.metric-target').value
+        })).filter(m => m.name)
+      };
+    }
+    const brazeChallenges = [
+      { id: 'data_fragmentation', label: 'Data Fragmentation', desc: 'Unify customer data from disparate sources (CDPs, warehouses)' },
+      { id: 'channel_silos', label: 'Channel Silos', desc: 'Orchestrate consistent messaging across email, SMS, push, in-app' },
+      { id: 'manual_orchestration', label: 'Manual Orchestration', desc: 'Replace rigid, manual setups with trigger-based journeys' },
+      { id: 'attribution_gaps', label: 'Attribution Gaps', desc: 'Link engagement directly to customer context' }
+    ];
+
+    const decisioningChallenges = [
+      { id: 'testing_fatigue', label: 'A/B Testing Fatigue', desc: 'Automate experimentation across millions of variations simultaneously' },
+      { id: 'generic_segments', label: 'Generic Segmentation', desc: 'Move from broad groups to true 1:1 decisions' },
+      { id: 'resource_bottleneck', label: 'Resource Bottlenecks', desc: 'Reduce manual labor for campaign optimization' },
+      { id: 'incentive_waste', label: 'Incentive Waste', desc: 'Determine minimum effective discount needed' },
+      { id: 'static_actions', label: 'Static "Next Best Action"', desc: 'Replace static rules with self-learning agents' }
+    ];
+
+    const dataWarehouseSuggestions = ['Snowflake', 'BigQuery', 'Redshift', 'Segment', 'mParticle', 'Treasure Data', 'Fivetran', 'dbt'];
+    const biSuggestions = ['Looker', 'Tableau', 'Metabase', 'Mode', 'Amplitude', 'Mixpanel', 'Google Analytics', 'Heap'];
+    const marketingSuggestions = ['Klaviyo', 'HubSpot', 'Iterable', 'Marketo', 'Salesforce Marketing Cloud', 'Twilio', 'Sendgrid'];
+
+    // Render challenge checkboxes
+    function renderChallenges() {
+      const brazeGroup = document.getElementById('brazeChallenges');
+      brazeGroup.innerHTML = '';
+      brazeChallenges.forEach(ch => {
+        const item = document.createElement('div');
+        item.className = 'checkbox-item';
+        item.innerHTML = `
+          <input type="checkbox" id="${ch.id}" value="${ch.id}">
+          <label for="${ch.id}">${ch.label}</label>
+        `;
+        brazeGroup.appendChild(item);
+      });
+
+      const decGroup = document.getElementById('decisioningChallenges');
+      decGroup.innerHTML = '';
+      decisioningChallenges.forEach(ch => {
+        const item = document.createElement('div');
+        item.className = 'checkbox-item';
+        item.innerHTML = `
+          <input type="checkbox" id="${ch.id}" value="${ch.id}">
+          <label for="${ch.id}">${ch.label}</label>
+        `;
+        decGroup.appendChild(item);
+      });
+
+      document.querySelectorAll('.checkbox-item input').forEach(cb => {
+        cb.addEventListener('change', updateCheckboxDisplay);
+      });
+    }
+
+    function updateCheckboxDisplay(e) {
+      const item = e.target.closest('.checkbox-item');
+      if (e.target.checked) {
+        item.classList.add('checked');
+      } else {
+        item.classList.remove('checked');
+      }
+      updateCompletion();
+    }
+
+    // Tag system - fixed
+    function setupTagInput(inputSelector, tagsSelector, suggestions) {
+      const input = document.querySelector(inputSelector);
+      const tagsDiv = document.querySelector(tagsSelector);
+      const tags = [];
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          const value = input.value.trim().replace(',', '');
+          if (value && !tags.includes(value)) {
+            tags.push(value);
+            renderTags();
+            input.value = '';
+          }
+        }
+      });
+
+      function renderTags() {
+        tagsDiv.innerHTML = tags.map((tag, idx) => `
+          <div class="tag">
+            ${tag}
+            <button type="button" onclick="event.preventDefault(); removeTag('${tagsSelector}', ${idx});">×</button>
+          </div>
+        `).join('');
+        // Store tags in a data attribute for form submission
+        tagsDiv.dataset.tags = JSON.stringify(tags);
+      }
+
+      window.removeTag = function(selector, idx) {
+        const tagsDiv = document.querySelector(selector);
+        const currentTags = JSON.parse(tagsDiv.dataset.tags || '[]');
+        currentTags.splice(idx, 1);
+        tags.length = 0;
+        tags.push(...currentTags);
+        renderTags();
+      };
+    }
+
+    window.downloadBrief = function() {
+      const briefContent = document.getElementById('outputSection').innerText;
+      const element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(briefContent));
+      element.setAttribute('download', 'braze-discovery-brief.txt');
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    };
+
+    // Metric handling
+    function addMetric() {
+      const container = document.getElementById('metricsContainer');
+      const row = document.createElement('div');
+      row.className = 'metric-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Metric name" class="metric-name">
+        <input type="text" placeholder="Current value" class="metric-current">
+        <input type="text" placeholder="Target" class="metric-target">
+        <button type="button" class="btn-secondary" onclick="removeMetric(this)">Remove</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeMetric(btn) {
+      btn.parentElement.remove();
+    }
+
+    // Form completion tracking
+    function updateCompletion() {
+      const fields = [
+        document.getElementById('companyName').value,
+        document.getElementById('industry').value,
+        document.getElementById('size').value,
+        document.getElementById('priority').value,
+        document.querySelectorAll('.checkbox-item input:checked').length > 0
+      ];
+      const completed = fields.filter(f => !!f).length;
+      const pct = Math.round((completed / 5) * 100);
+      
+      const statusBar = document.getElementById('statusBar');
+      const statusText = document.getElementById('statusText');
+      
+      if (pct === 100) {
+        statusBar.classList.remove('incomplete');
+        statusBar.classList.add('complete');
+        statusText.textContent = '✓ Form is complete - ready to generate';
+      } else {
+        statusBar.classList.add('incomplete');
+        statusBar.classList.remove('complete');
+        statusText.textContent = `${5 - completed} required field(s) remaining`;
+      }
+      document.getElementById('completionPct').textContent = pct + '%';
+    }
+
+    // Form submission
+    document.getElementById('discoveryForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      console.log('Form submitted');
+      
+      // Validate required fields
+      const company = document.getElementById('companyName').value.trim();
+      const industry = document.getElementById('industry').value;
+      const size = document.getElementById('size').value;
+      const priority = document.getElementById('priority').value.trim();
+      const challenges = Array.from(document.querySelectorAll('.checkbox-item input:checked')).map(cb => cb.value);
+      
+      if (!company || !industry || !size || !priority || challenges.length === 0) {
+        alert('Please fill in all required fields and select at least one challenge');
+        return;
+      }
+      
+      const formData = collectFormData();
+      console.log('Form data:', formData);
+      
+      // Show shareable link button
+      document.getElementById('shareLinkBtn').style.display = 'inline-block';
+      
+      generateOutput(formData);
+    });
+
+    // Share link button click handler
+    document.getElementById('shareLinkBtn').addEventListener('click', generateShareableLink);
+
+    const customerStories = [
+      {
+        company: 'Sweetgreen',
+        industry: 'QSR',
+        challenges: ['channel_silos', 'manual_orchestration'],
+        situation: 'Over-reliance on third-party delivery with lower margins.',
+        problem: 'No owned channel strategy; customers routed through expensive delivery apps.',
+        solution: 'SMS channel with unique promo codes to drive app orders and owned reach.',
+        outcome: '10k+ new SMS subscribers, 10% campaign conversion rate',
+        metric: 'Revenue',
+        parallelKey: 'owned-channels'
+      },
+      {
+        company: 'foodora',
+        industry: 'QSR',
+        challenges: ['testing_fatigue', 'generic_segments'],
+        situation: 'Fragmented tools and poor send timing caused fatigue and churn.',
+        problem: 'Manual campaign setup, inconsistent messaging, poor timing = 26% unsubscribe rate.',
+        solution: 'AI Intelligent Timing + cross-channel orchestration to optimize send times per customer.',
+        outcome: '41% conversion rate, -26% unsubscribes, +6% push opens',
+        metric: 'Conversions',
+        parallelKey: 'timing-matters'
+      },
+      {
+        company: 'LATAM Airlines',
+        industry: 'Travel',
+        challenges: ['testing_fatigue', 'static_actions'],
+        situation: 'Abandoned bookings costing revenue; manual testing couldn\'t keep pace.',
+        problem: 'Weeks to test variations; couldn\'t optimize across subject, image, offer, timing simultaneously.',
+        solution: 'Decisioning Studio testing 6+ dimensions per customer in real-time with autonomous optimization.',
+        outcome: '+$10M+ annual revenue, +45% incremental revenue per message',
+        metric: 'Revenue',
+        parallelKey: 'multi-dimensional-testing'
+      },
+      {
+        company: 'Blacklane',
+        industry: 'Travel',
+        challenges: ['generic_segments', 'channel_silos'],
+        situation: 'Lifecycle conversion underperforming; low CRM-attributed revenue.',
+        problem: 'One-size-fits-all messaging across channels; no personalization or coordination.',
+        solution: 'Multi-channel personalized journeys with behavior triggers and segment-specific messaging.',
+        outcome: '+194% lifecycle conversion, +94% CRM-attributed revenue',
+        metric: 'Revenue',
+        parallelKey: 'omnichannel-personalization'
+      },
+      {
+        company: 'Wellhub (Gympass)',
+        industry: 'Health',
+        challenges: ['resource_bottleneck', 'generic_segments'],
+        situation: 'Needed hyper-personalization and thousands of concurrent campaigns.',
+        problem: 'Manual execution limited experimentation; couldn\'t scale personalization.',
+        solution: 'Canvas behavior-triggered journeys with zero-party data from in-app surveys.',
+        outcome: '3× sign-up volume, up to 70% CTR, +5% conversion lift',
+        metric: 'Growth',
+        parallelKey: 'automation-at-scale'
+      },
+      {
+        company: 'Too Good To Go',
+        industry: 'QSR',
+        challenges: ['data_fragmentation', 'static_actions'],
+        situation: 'High app usage but low conversions; supply is limited and location-dependent.',
+        problem: 'Can\'t recommend broadly; inventory constraints require hyper-relevant personalization.',
+        solution: 'Supply-based triggers and local availability via Connected Content and Catalogs.',
+        outcome: '+135% CRM-attributed purchases, +2× conversion lift',
+        metric: 'Revenue',
+        parallelKey: 'inventory-aware-personalization'
+      },
+      {
+        company: 'FREE NOW',
+        industry: 'Mobility',
+        challenges: ['manual_orchestration', 'resource_bottleneck'],
+        situation: 'Driver activation gaps, rider cancellations, lapsed user churn.',
+        problem: 'Two-sided marketplace needs supply-side and demand-side journeys; manual work doesn\'t scale.',
+        solution: 'Automated Canvas journeys: incentives for drivers, pre-cancellation offers for riders, SMS reactivation.',
+        outcome: '+47% driver activation, +33% sessions, +21% bookings',
+        metric: 'Orders',
+        parallelKey: 'two-sided-automation'
+      },
+      {
+        company: 'Luxury Escapes',
+        industry: 'Travel',
+        challenges: ['generic_segments', 'attribution_gaps'],
+        situation: 'Dynamic membership personalization across markets; can\'t show right benefits per country.',
+        problem: 'Risk of showing wrong offers; heavy operational overhead; manual template maintenance.',
+        solution: 'Catalogs + Liquid Logic for dynamic eligibility-aware content rendering at send time.',
+        outcome: '142% vs signup goal, +10% email CTR, +1.5% open rate',
+        metric: 'Conversions',
+        parallelKey: 'dynamic-eligibility'
+      },
+      {
+        company: 'Uber Carshare',
+        industry: 'Mobility',
+        challenges: ['static_actions', 'channel_silos'],
+        situation: 'Booking drop-off and owner activation friction across two-sided marketplace.',
+        problem: 'No coordinated journey; high abandonment on searches and bookings.',
+        solution: 'Behavior-triggered Canvas journeys with reminders and incentives on abandoned actions.',
+        outcome: '+20% completed bookings, 1-hour campaign launch time',
+        metric: 'Orders',
+        parallelKey: 'abandonment-recovery'
+      },
+      {
+        company: 'Rappi',
+        industry: 'QSR',
+        challenges: ['testing_fatigue', 'channel_silos'],
+        situation: 'Need to reactivate lapsed users; limited reach with single channel.',
+        problem: 'Email-only reactivation leaving money on table; no multi-channel coordination.',
+        solution: 'Multi-channel Canvas reactivation including WhatsApp + personalized incentives.',
+        outcome: '+80% purchase vs control, +43% with 2+ purchases in 30 days',
+        metric: 'Orders',
+        parallelKey: 'omnichannel-reactivation'
+      },
+      {
+        company: 'Grubhub',
+        industry: 'QSR',
+        challenges: ['generic_segments', 'attribution_gaps'],
+        situation: 'Generic year-end campaigns had low engagement despite rich customer data.',
+        problem: 'One-message-fits-all approach; can\'t connect personalization to order attribution.',
+        solution: 'Modular personalized Year-in-Review emails with Liquid and Connected Content.',
+        outcome: '+100% social mentions, +18% word-of-mouth referrals',
+        metric: 'Engagement',
+        parallelKey: 'personalized-moments'
+      }
+    ];
+
+    function findMatchedStories(formData) {
+      return customerStories.map(story => {
+        let score = 0;
+        // Industry match
+        if (story.industry === formData.industry) score += 3;
+        // Challenge matches
+        formData.challenges.forEach(ch => {
+          if (story.challenges.includes(ch)) score += 2;
+        });
+        return { ...story, matchScore: score };
+      }).sort((a, b) => b.matchScore - a.matchScore).slice(0, 3);
+    }
+
+    function generateOutput(data) {
+      const matched = findMatchedStories(data);
+
+      let html = `
+        <div class="form-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="section-title">✨ Discovery Brief</div>
+            <div style="display: flex; gap: 1rem;">
+              <button type="button" class="btn-secondary" onclick="copyCurrentLink()">🔗 Copy Link</button>
+              <button type="button" class="btn-secondary" onclick="exportToGoogleDocs()">📄 Google Docs</button>
+              <button type="button" class="btn-secondary" onclick="downloadBrief()">📥 Download Brief</button>
+              <button type="button" class="btn-secondary" onclick="document.getElementById('outputSection').classList.add('hidden'); window.scrollTo(0,0);">← Back to Form</button>
+            </div>
+          </div>
+
+          <!-- EXECUTIVE BRIEF -->
+          <div style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(167, 139, 250, 0.15)); border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 1rem; padding: 2.5rem; margin-bottom: 2.5rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+              <div>
+                <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Company</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: white;">${data.company}</div>
+                <div style="color: #cbd5e1; font-size: 0.95rem; margin-top: 0.25rem;">${data.industry} • ${data.size}</div>
+              </div>
+              <div>
+                <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">Primary Goal</div>
+                <div style="font-size: 1.1rem; color: #06b6d4; font-weight: 600;">${data.priority}</div>
+              </div>
+            </div>
+
+            <div style="color: #cbd5e1; line-height: 1.8; font-size: 1.05rem;">
+              <p style="margin-bottom: 1rem;"><strong>Biggest Bottleneck:</strong> "${data.currentBAU.bottleneck}"</p>
+              <p style="margin-bottom: 1rem;"><strong>How They Work Today:</strong> ${data.currentBAU.campaigns}</p>
+              <p><strong>Current Optimization:</strong> ${data.currentBAU.optimization}</p>
+            </div>
+          </div>
+
+          <!-- MATCHED STORIES -->
+          <div id="storiesContainer"></div>
+
+          <!-- INTERACTIVE EXPLORATION -->
+          <div id="interactiveSection" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(71, 85, 105, 0.3);">
+            <div class="section-title">🔍 Explore More Stories</div>
+            <div id="storyExploration"></div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('outputSection').innerHTML = html;
+      document.getElementById('outputSection').classList.remove('hidden');
+
+      // Render matched stories as cards
+      const storiesContainer = document.getElementById('storiesContainer');
+      matched.forEach((story, idx) => {
+        const storyCard = createStoryCard(story, idx, data);
+        storiesContainer.appendChild(storyCard);
+      });
+
+      // Show interactive section with remaining stories
+      const remaining = customerStories.filter(s => !matched.includes(s)).slice(0, 3);
+      if (remaining.length > 0) {
+        document.getElementById('interactiveSection').style.display = 'block';
+        const explorationDiv = document.getElementById('storyExploration');
+        remaining.forEach((story, idx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-secondary';
+          btn.textContent = `📖 ${story.company} (${story.industry})`;
+          btn.style.marginRight = '0.75rem';
+          btn.style.marginBottom = '0.75rem';
+          btn.onclick = () => exploreStory(story, data);
+          explorationDiv.appendChild(btn);
+        });
+      }
+
+      window.scrollTo(0, 0);
+    }
+
+    function createStoryCard(story, idx, data) {
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: rgba(51, 65, 85, 0.4);
+        border-left: 4px solid ${idx === 0 ? '#10b981' : '#06b6d4'};
+        border-radius: 0.8rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+      `;
+
+      const matchBadge = idx === 0 ? '<span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.6); color: #86efac; padding: 0.4rem 0.8rem; border-radius: 0.35rem; font-size: 0.8rem; font-weight: 600;">🎯 Best Match</span>' : '';
+
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+          <div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: white;">${story.company}</div>
+            <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.5rem;">${story.industry} • Score: ${story.matchScore}</div>
+          </div>
+          ${matchBadge}
+        </div>
+
+        <div style="color: #cbd5e1; line-height: 1.8; font-size: 1rem;">
+          <div style="margin-bottom: 1.5rem;">
+            <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">SITUATION</div>
+            <p>${story.situation}</p>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">PROBLEM</div>
+            <p>${story.problem}</p>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">SOLUTION</div>
+            <p>${story.solution}</p>
+          </div>
+
+          <div>
+            <div style="color: #86efac; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">RESULTS</div>
+            <p style="color: #86efac; font-weight: 600; font-size: 1.05rem;">${story.outcome}</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(71, 85, 105, 0.3);">
+          <div style="color: #a78bfa; font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem;">WHY THIS MATTERS FOR ${data.company.toUpperCase()}</div>
+          <p style="color: #cbd5e1; line-height: 1.8;">
+            Like ${story.company}, your challenge is moving from <strong>manual, disconnected workflows</strong> to <strong>intelligent, orchestrated engagement</strong>. Their results came from automating what was previously manual and personalizing what was previously generic.
+          </p>
+        </div>
+      `;
+
+      return card;
+    }
+
+    function exploreStory(story, originalData) {
+      // Regenerate output with this story as primary
+      const updatedStories = [story, ...customerStories.filter(s => s !== story)];
+      
+      const exploreDiv = document.getElementById('storyExploration');
+      exploreDiv.innerHTML = `
+        <div style="background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.4); border-radius: 0.8rem; padding: 1.5rem; margin-bottom: 1.5rem;">
+          <div style="color: #a78bfa; font-weight: 600; margin-bottom: 0.75rem;">Deep Dive: ${story.company}</div>
+          <div style="color: #cbd5e1; line-height: 1.8;">
+            ${story.situation}<br><br>
+            <strong>The Problem:</strong> ${story.problem}<br><br>
+            <strong>How They Solved It:</strong> ${story.solution}<br><br>
+            <strong style="color: #86efac;">Results:</strong> <span style="color: #86efac; font-weight: 600;">${story.outcome}</span><br><br>
+            <strong>For ${originalData.company}:</strong> This parallel matters because ${story.parallelKey.replace(/-/g, ' ')}. If you implemented a similar approach, you'd likely see the same 10-40% improvement in ${originalData.priority.toLowerCase()}.
+          </div>
+        </div>
+      `;
+
+      // Hide other exploration buttons
+      Array.from(exploreDiv.querySelectorAll('button')).forEach(btn => btn.style.display = 'none');
+    }
+
+    function exportToGoogleDocs() {
+      const briefContent = document.getElementById('outputSection').innerHTML;
+      const company = document.getElementById('companyName').value;
+      
+      // Extract text content from brief
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = briefContent;
+      const textContent = tempDiv.innerText;
+      
+      // Create Google Docs link with content
+      const encodedText = encodeURIComponent(textContent.substring(0, 1000));
+      const title = encodeURIComponent(company + ' - Braze Discovery Brief');
+      const googleDocsUrl = `https://docs.google.com/document/create?title=${title}&body=${encodedText}`;
+      
+      window.open(googleDocsUrl, '_blank');
+    }
+
+    function downloadBrief() {
+      const briefContent = document.getElementById('outputSection').innerHTML;
+      const company = document.getElementById('companyName').value;
+      
+      const html = `
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Calibri, sans-serif; line-height: 1.6; margin: 1in; }
+            h1 { color: #0066cc; font-size: 24pt; }
+            h2 { color: #0099cc; font-size: 14pt; margin-top: 1.5em; }
+            strong { color: #003366; }
+          </style>
+        </head>
+        <body>
+          ${briefContent}
+        </body>
+        </html>
+      `;
+      
+      const blob = new Blob([html], { type: 'application/msword' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = company + '-Braze-Discovery-Brief.doc';
+      link.click();
+    }
+
+    // Initialize
+    loadFromUrl(); // Check if there are URL params to pre-fill
+    renderChallenges();
+    setupTagInput('#dataWarehouseInput', '#dataWarehouseTags', dataWarehouseSuggestions);
+    setupTagInput('#biInput', '#biTags', biSuggestions);
+    setupTagInput('#marketingInput', '#marketingTags', marketingSuggestions);
+
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+      field.addEventListener('change', updateCompletion);
+      field.addEventListener('input', updateCompletion);
+    });
+
+    updateCompletion();
+  </script>
+</body>
+</html>
